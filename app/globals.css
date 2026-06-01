@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Stitch design system tokens — HomeOps */
+:root {
+  /* Surface hierarchy */
+  --color-canvas:            #f9f9ff;
+  --color-canvas-raised:     #f0f3ff;
+  --color-canvas-container:  #e7eefe;
+  --color-canvas-high:       #e2e8f8;
+  --color-canvas-white:      #ffffff;
+
+  /* Text */
+  --color-ink:               #151c27;
+  --color-ink-muted:         #434655;
+  --color-ink-faint:         rgba(67, 70, 85, 0.12);
+
+  /* Brand */
+  --color-accent:            #004ac6;
+  --color-accent-2:          #2563eb;
+  --color-accent-hover:      #003da8;
+
+  /* AI tertiary */
+  --color-tertiary:          #6a1edb;
+  --color-tertiary-dim:      #8343f4;
+  --color-tertiary-bg:       #eaddff;
+
+  /* Utility */
+  --color-input-fill:        #e2e8f8;
+  --color-outline:           #737686;
+  --color-outline-variant:   rgba(195, 198, 215, 0.4);
+  --color-error:             #ba1a1a;
+
+  /* Fonts — loaded via next/font/google */
+  --font-manrope: 'Manrope', system-ui, sans-serif;
+  --font-inter:   'Inter', system-ui, sans-serif;
+  /* Fraunces alias → Manrope per Stitch design (no serif display font) */
+  --font-fraunces: var(--font-manrope);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 26px;
+}
+
+/* Max content width container */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (min-width: 768px) {
+  .container { padding: 0 40px; }
+}
+
+@media (min-width: 1280px) {
+  .container { padding: 0 48px; }
+}
+
+/* Gradient button utility */
+.btn-primary {
+  background: linear-gradient(180deg, #004ac6 0%, #2563eb 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 16px;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.35);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* AI chip / badge */
+.ai-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(106, 30, 219, 0.08);
+  color: #6a1edb;
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 100px;
+}
+
+/* Section label (eyebrow) */
+.section-label {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+/* Material Symbols Outlined */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  -webkit-font-smoothing: antialiased;
+}
+
+.material-symbols-filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Premium shadow util */
+.premium-shadow {
+  box-shadow: 0px 24px 48px -12px rgba(21, 28, 39, 0.08);
+}
+
+/* Glass header */
+.glass-header {
+  background: rgba(249, 249, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}

@@ -1,0 +1,8 @@
+1. Please use Brave MPC - Replace unrealistic and silly values such as: $480/year and Join 2,400+ households on the waitlist (as of May 2026) - Replace to more realistic number (you can research, maybe 500+ , and saving starting from 1-2k or something like that and starting , not precise 480$)
+2. Welcome screen and Designed for precision - replace with ../images/appDesign, home screen on Welcome screen and 2 other on design.
+3. Remove the navigation completely , we dont need it, from footer and header.
+4. Add please something near email inputs , small labes that we are not going to use your personal data anywhere else or something like that
+5. Fix title From voice command to grocery list in three steps and move that section to Features (current feature blocks remove please)
+6. After feature section that we are gonna replace add some kind of metrics section with green and red colors to show users 3 metrics of their potential savings. We want to show not only money, but that we save their time a lot and create food plan so its automate their lifestyle and time and also money saves.
+7. For that section - Save money without thinking about it. Add please in right side small interactive calculator to allow user calculate his saving during the year, start from 1 month , something like slider that user can drag and integract up to 1 year and based on that potential saving value changes from some reaslitic value like starting 100+ to 1000+ or values you gonna research in point 1
+8. Replace ALDI store with Costco, And also use ../images/shopsLogos to design that section, use logos instead labels, make them same size without any hover
