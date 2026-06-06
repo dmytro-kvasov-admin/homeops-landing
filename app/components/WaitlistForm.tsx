@@ -149,7 +149,7 @@ export function WaitlistForm() {
                     className="font-body"
                     style={{ fontSize: '17px', color: 'rgba(219,225,255,0.85)', lineHeight: '1.6', maxWidth: '520px', margin: '0 auto' }}
                   >
-                    Join 500+ households who are done overspending. Plan meals on a budget, compare grocery prices at Walmart vs Kroger, and stop wasting food.
+                    Join 500+ households who are done overspending. Plan meals on a budget, compare grocery prices at Walmart, Kroger, and more — and stop wasting food.
                   </p>
                 </div>
 

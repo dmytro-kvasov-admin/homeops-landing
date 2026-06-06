@@ -109,7 +109,7 @@ const jsonLd = {
           name: 'How does HomeOps compare grocery prices?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'HomeOps pulls real prices from Walmart and Kroger for every item on your list and shows you a side-by-side total before you leave home. You see exactly which store is cheaper for your specific list — not generic estimates.',
+            text: 'HomeOps pulls real prices from Walmart, Kroger, and other major stores for every item on your list and shows you a side-by-side total before you leave home. You see exactly which store is cheaper for your specific list — not generic estimates.',
           },
         },
         {
@@ -117,7 +117,7 @@ const jsonLd = {
           name: 'Is HomeOps free?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Yes — HomeOps has a free plan with 3 AI meal plans per month. The Pro plan at $4.99/month adds unlimited meal plans, voice input, grocery price comparison, and weekly budget tracking. No credit card required to join the waitlist.',
+            text: "Yes — HomeOps is free. We're launching this summer and opening early access to our waitlist first. No credit card, no catch. Join the waitlist and you'll be among the first to use it when we open the doors.",
           },
         },
       ],

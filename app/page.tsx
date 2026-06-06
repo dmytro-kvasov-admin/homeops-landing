@@ -111,19 +111,19 @@ export default function Home() {
               {[
                 {
                   q: 'How do I plan meals for the week on a budget?',
-                  a: "Tell HomeOps how many dinners you need and your spending target for the week. It picks the meals, builds the grocery list, and shows you the total cost at Walmart vs Kroger before you shop — so you know exactly what you'll spend before you leave home.",
+                  a: "Tell HomeOps how many dinners you need and your spending target for the week. It picks the meals, builds the grocery list, and shows you the total cost at top stores before you shop — so you know exactly what you'll spend before you leave home.",
                 },
                 {
                   q: 'How does HomeOps compare grocery prices?',
-                  a: 'HomeOps pulls real prices from Walmart and Kroger for every item on your list and shows you a side-by-side total. You see exactly which store is cheaper for your specific list this week — not generic estimates. Most families find a $10–$20 difference per trip.',
+                  a: 'HomeOps pulls real prices from Walmart, Kroger, and other major stores for every item on your list and shows you a side-by-side total. You see exactly which store is cheaper for your specific list this week — not generic estimates. Most families find a $10–$20 difference per trip.',
                 },
                 {
                   q: 'Is HomeOps free?',
-                  a: 'Yes — HomeOps has a free plan with 3 AI meal plans per month. The Pro plan at $4.99/month adds unlimited meal plans, voice input, grocery price comparison, and weekly budget tracking. No credit card required to join the waitlist.',
+                  a: "Yes — HomeOps is free. We're launching this summer and opening early access to our waitlist first. No credit card, no catch. Join the waitlist and you'll be among the first to use it when we open the doors.",
                 },
                 {
-                  q: "What's the difference between HomeOps and Mealime or AnyList?",
-                  a: "Mealime plans meals but never shows you the price — you find out what you spent after checkout. AnyList builds lists but can't compare store prices. HomeOps is the first app to connect all three: meal planning, grocery list, and real-time price comparison.",
+                  q: "What's the difference between HomeOps and Mealime, AnyList, or Yummly?",
+                  a: "Mealime plans meals but never shows you the price — you find out what you spent after checkout. AnyList builds lists but can't compare store prices. Yummly focused on recipe discovery and shut down in December 2024 without ever solving the budget problem. HomeOps is the first app to connect all three: meal planning, grocery list, and real-time price comparison across major stores.",
                 },
               ].map((item, i, arr) => (
                 <div

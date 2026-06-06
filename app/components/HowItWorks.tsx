@@ -12,7 +12,7 @@ const steps = [
     icon: 'smart_toy',
     iconColor: '#6a1edb',
     title: 'AI builds your list',
-    body: 'Items cluster by aisle. Real prices load from Walmart and Kroger automatically. See the grocery price comparison before you leave — down to the cent.',
+    body: 'Items cluster by aisle. Real prices load from Walmart, Kroger, and other major stores automatically. See the grocery price comparison before you leave — down to the cent.',
     alt: false,
   },
   {
@@ -26,10 +26,10 @@ const steps = [
   {
     number: '04',
     icon: 'local_shipping',
-    iconColor: '#22c55e',
+    iconColor: '#f59e0b',
     title: 'Or get it delivered',
     body: 'Prefer delivery? We show you real store prices first — then surface delivery options with full markup costs visible. No 15% service fee hiding in your subtotal.',
-    alt: true,
+    alt: false,
   },
 ]
 

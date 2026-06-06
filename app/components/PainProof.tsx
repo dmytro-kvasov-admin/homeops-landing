@@ -70,7 +70,7 @@ export function PainProof() {
               People have been asking for years: &ldquo;Is there one app that does meal planning, grocery list, <em>and</em> budget tracking?&rdquo; The answer has always been no. HomeOps is the first app that connects all three.
             </p>
             <p className="font-body text-on-surface-variant mb-8" style={{ fontSize: '15px', lineHeight: '1.65', color: '#6b7280' }}>
-              Plan meals on a budget, compare grocery prices at Walmart vs Kroger, and stop wasting food — in one place.
+              Plan meals on a budget, compare grocery prices at Walmart, Kroger, and nearby stores — and stop wasting food — all in one place.
             </p>
 
             {/* AI insight chip */}

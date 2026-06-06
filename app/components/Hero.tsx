@@ -11,7 +11,7 @@ const VARIANTS = {
     badge: 'Voice-first grocery planning',
   },
   B: {
-    sub: 'Pick five dinners. See your exact total at Walmart vs Kroger before you leave home. The grocery budget app that shows what you\'ll spend before you shop.',
+    sub: 'Pick five dinners. See your exact total at Walmart, Kroger, and other major stores before you leave home. The grocery budget app that shows what you\'ll spend before you shop.',
     badge: 'Cross-store price comparison',
   },
 } as const

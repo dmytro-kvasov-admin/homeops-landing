@@ -61,7 +61,7 @@ export function ValueHighlight() {
                 className="font-body text-on-surface-variant mb-10"
                 style={{ fontSize: '19px', lineHeight: '1.65' }}
               >
-                The grocery budget app that scans Walmart and Kroger prices before you shop, picks the cheaper store automatically. Most households save $1,000+ a year.
+                The grocery budget app that scans prices at Walmart, Kroger, and other major stores before you shop, then picks the cheapest store automatically. Most households save $1,000+ a year.
               </p>
 
               {/* Savings badge */}
