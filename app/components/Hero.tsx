@@ -129,11 +129,14 @@ export function Hero() {
                   maxWidth: '480px',
                 }}
               >
-                <p style={{ fontFamily: 'var(--font-manrope)', fontSize: '18px', fontWeight: 700, color: '#004ac6', margin: '0 0 4px' }}>
+                <p style={{ fontFamily: 'var(--font-manrope)', fontSize: '18px', fontWeight: 700, color: '#004ac6', margin: '0 0 8px' }}>
                   You&apos;re on the list.
                 </p>
-                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '14px', color: '#434655', margin: 0 }}>
-                  We&apos;ll email you when early access opens. No spam, ever.
+                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '14px', color: '#434655', margin: '0 0 4px' }}>
+                  We&apos;ll reach out when early access opens. No spam, ever.
+                </p>
+                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: '#6b7280', margin: 0 }}>
+                  Confirmation email sent to <strong style={{ color: '#434655' }}>{email}</strong>
                 </p>
               </div>
             ) : (

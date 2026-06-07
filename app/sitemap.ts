@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://homeopsapp.com'
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://homeops.us'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

@@ -53,7 +53,7 @@ export function userConfirmationEmail(name: string | undefined): string {
 </tr>
 <tr>
   <td style="background-color:#f9f9ff;padding:20px 40px;border-top:1px solid #e8eaf2;">
-    <p style="font-size:11px;color:#9ca3af;margin:0;line-height:1.6;font-family:system-ui,-apple-system,sans-serif;">HomeOps &middot; US early access &middot; Launching summer 2026<br>You received this because you requested access at homeopsapp.com</p>
+    <p style="font-size:11px;color:#9ca3af;margin:0;line-height:1.6;font-family:system-ui,-apple-system,sans-serif;">HomeOps &middot; US early access &middot; Launching summer 2026<br>You received this because you requested access at homeops.us</p>
   </td>
 </tr>
 </table>

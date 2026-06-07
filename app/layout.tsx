@@ -16,7 +16,7 @@ const inter = Inter({
   display: 'swap',
 })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://homeopsapp.com'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://homeops.us'
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

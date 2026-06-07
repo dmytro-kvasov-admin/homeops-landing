@@ -36,13 +36,14 @@ export async function POST(request: Request) {
 
   const { email, name, age, zip } = parsed.data
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@homeops.com'
   const adminEmail = process.env.RESEND_ADMIN_EMAIL || 'homeopsaiapp@gmail.com'
 
   try {
-    // Confirmation email to the user
+    // Confirmation email to the user — replyTo so replies land in contact@homeops.com
     await resend.emails.send({
       from: `HomeOps <${fromEmail}>`,
+      replyTo: fromEmail,
       to: email,
       subject: "You're on the HomeOps waitlist",
       html: userConfirmationEmail(name),

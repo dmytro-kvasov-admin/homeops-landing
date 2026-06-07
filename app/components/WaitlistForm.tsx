@@ -125,8 +125,11 @@ export function WaitlistForm() {
                 >
                   You&apos;re on the list
                 </h2>
-                <p className="font-body" style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6' }}>
-                  We&apos;ll email you when early access opens. No spam, no credit card.
+                <p className="font-body" style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '12px' }}>
+                  We&apos;ll reach out when early access opens. No spam, ever.
+                </p>
+                <p className="font-body" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.6' }}>
+                  A confirmation email is on its way to <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{form.email}</strong>
                 </p>
               </div>
             ) : (
