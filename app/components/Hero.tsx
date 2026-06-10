@@ -33,33 +33,10 @@ const avatars = [
 
 export function Hero() {
   const [variant, setVariant] = useState<Variant>('B')
-  const [email, setEmail] = useState('')
-  const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   useEffect(() => {
     setVariant(getOrAssignVariant())
   }, [])
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email || formStatus === 'loading') return
-
-    setFormStatus('loading')
-    try {
-      const res = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
-      if (res.ok) {
-        setFormStatus('success')
-      } else {
-        setFormStatus('error')
-      }
-    } catch {
-      setFormStatus('error')
-    }
-  }
 
   const copy = VARIANTS[variant]
 
@@ -119,81 +96,25 @@ export function Hero() {
               {copy.sub}
             </p>
 
-            {/* Form */}
-            {formStatus === 'success' ? (
-              <div
+            <div style={{ marginBottom: '32px' }}>
+              <a
+                href="#waitlist"
+                className="btn-primary"
                 style={{
-                  padding: '24px 32px',
-                  background: 'rgba(0,74,198,0.06)',
-                  borderRadius: '16px',
-                  maxWidth: '480px',
+                  padding: '16px 28px',
+                  fontSize: '15px',
+                  whiteSpace: 'nowrap',
+                  textDecoration: 'none',
+                  display: 'inline-block',
                 }}
               >
-                <p style={{ fontFamily: 'var(--font-manrope)', fontSize: '18px', fontWeight: 700, color: '#004ac6', margin: '0 0 8px' }}>
-                  You&apos;re on the list.
-                </p>
-                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '14px', color: '#434655', margin: '0 0 4px' }}>
-                  We&apos;ll reach out when early access opens. No spam, ever.
-                </p>
-                <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: '#6b7280', margin: 0 }}>
-                  Confirmation email sent to <strong style={{ color: '#434655' }}>{email}</strong>
-                </p>
-              </div>
-            ) : (
-              <form
-                onSubmit={handleSubmit}
-                className="flex flex-col sm:flex-row gap-4"
-                style={{ maxWidth: '520px', marginBottom: '32px' }}
-              >
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  required
-                  disabled={formStatus === 'loading'}
-                  className="font-body flex-grow"
-                  style={{
-                    padding: '16px 20px',
-                    borderRadius: '12px',
-                    background: '#e2e8f8',
-                    border: 'none',
-                    fontSize: '16px',
-                    color: '#151c27',
-                    outline: 'none',
-                    transition: 'background 150ms ease, box-shadow 150ms ease',
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.background = '#ffffff'
-                    e.currentTarget.style.boxShadow = '0 0 0 2px rgba(0,74,198,0.2)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.background = '#e2e8f8'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={formStatus === 'loading'}
-                  className="btn-primary"
-                  style={{ padding: '16px 28px', fontSize: '15px', whiteSpace: 'nowrap' }}
-                >
-                  {formStatus === 'loading' ? 'Joining...' : 'Request early access'}
-                </button>
-              </form>
-            )}
+                Request early access
+              </a>
+            </div>
 
-            {formStatus === 'error' && (
-              <p className="font-body" style={{ fontSize: '14px', color: '#ba1a1a', marginBottom: '16px' }}>
-                Something went wrong. Try again.
-              </p>
-            )}
-
-            {formStatus !== 'success' && (
-              <p className="font-body" style={{ fontSize: '12px', color: '#6b7280', marginBottom: '16px', marginTop: '-16px' }}>
-                Your email stays private — we never share or sell it.
-              </p>
-            )}
+            <p className="font-body" style={{ fontSize: '12px', color: '#6b7280', marginBottom: '16px', marginTop: '-16px' }}>
+              Your email stays private — we never share or sell it.
+            </p>
 
             {/* Social proof avatars */}
             <div className="flex items-center gap-4">

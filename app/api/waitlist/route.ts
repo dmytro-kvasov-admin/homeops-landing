@@ -36,29 +36,37 @@ export async function POST(request: Request) {
 
   const { email, name, age, zip } = parsed.data
   const resend = new Resend(process.env.RESEND_API_KEY)
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@homeops.com'
   const adminEmail = process.env.RESEND_ADMIN_EMAIL || 'homeopsaiapp@gmail.com'
+  // Resend's shared sender — works without a verified domain.
+  const fromAddress = 'HomeOps <onboarding@resend.dev>'
 
   try {
-    // Confirmation email to the user — replyTo so replies land in contact@homeops.com
-    await resend.emails.send({
-      from: `HomeOps <${fromEmail}>`,
-      replyTo: fromEmail,
+    const userResult = await resend.emails.send({
+      from: fromAddress,
+      replyTo: adminEmail,
       to: email,
       subject: "You're on the HomeOps waitlist",
       html: userConfirmationEmail(name),
     })
+    if (userResult.error) {
+      console.error('Resend user email error:', userResult.error)
+      return Response.json({ error: 'Failed to join waitlist' }, { status: 500 })
+    }
 
-    // Internal lead notification
-    await resend.emails.send({
-      from: `HomeOps Alerts <${fromEmail}>`,
+    const adminResult = await resend.emails.send({
+      from: fromAddress,
+      replyTo: email,
       to: adminEmail,
       subject: `New waitlist signup: ${email}`,
       html: adminNotificationEmail(name, email, age, zip),
     })
+    if (adminResult.error) {
+      console.error('Resend admin email error:', adminResult.error)
+    }
 
     return Response.json({ success: true })
   } catch (err) {
+    console.error('Resend exception:', err)
     const message = err instanceof Error ? err.message : 'Unknown error'
     if (message.includes('already exists') || message.includes('duplicate')) {
       return Response.json({ success: true })
