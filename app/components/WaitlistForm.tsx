@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 const AGE_RANGES = ['Under 18', '18–24', '25–34', '35–44', '45–54', '55–64', '65+']
+
+const ERROR_BORDER = 'rgba(255,120,120,0.9)'
+const ERROR_SHADOW = '0 0 0 3px rgba(255,90,90,0.18)'
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
@@ -30,20 +33,39 @@ const blurStyle: React.CSSProperties = {
   boxShadow: 'none',
 }
 
-function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+const errorStyle: React.CSSProperties = {
+  borderColor: ERROR_BORDER,
+  boxShadow: ERROR_SHADOW,
+  background: 'rgba(255,80,80,0.08)',
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function Field({
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string
+  required?: boolean
+  error?: string
+  children: React.ReactNode
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <label
         style={{
           fontSize: '12px',
           fontWeight: 600,
-          color: 'rgba(255,255,255,0.6)',
+          color: error ? '#ffb4b4' : 'rgba(255,255,255,0.6)',
           letterSpacing: '0.06em',
           textTransform: 'uppercase',
           fontFamily: 'var(--font-inter)',
         }}
       >
         {label}
+        {required && <span style={{ color: '#ff8a8a', marginLeft: '4px' }}>*</span>}
         {!required && (
           <span style={{ fontWeight: 400, marginLeft: '6px', opacity: 0.6, textTransform: 'none', letterSpacing: 0 }}>
             optional
@@ -51,24 +73,62 @@ function Field({ label, required, children }: { label: string; required?: boolea
         )}
       </label>
       {children}
+      {error && (
+        <p
+          role="alert"
+          style={{
+            margin: 0,
+            fontSize: '12px',
+            color: '#ffb4b4',
+            fontFamily: 'var(--font-inter)',
+            lineHeight: 1.4,
+          }}
+        >
+          {error}
+        </p>
+      )}
     </div>
   )
 }
 
+type FieldKey = 'email' | 'age' | 'zip'
+
 export function WaitlistForm() {
   const [form, setForm] = useState({ name: '', email: '', age: '', zip: '' })
+  const [touched, setTouched] = useState<Record<FieldKey, boolean>>({ email: false, age: false, zip: false })
+  const [submitAttempted, setSubmitAttempted] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const errors = useMemo(() => {
+    const e: Partial<Record<FieldKey, string>> = {}
+    if (!form.email.trim()) e.email = 'Email is required'
+    else if (!EMAIL_RE.test(form.email.trim())) e.email = 'Enter a valid email address'
+    if (!form.age) e.age = 'Age range is required'
+    if (!form.zip) e.zip = 'ZIP code is required'
+    else if (!/^\d{5}$/.test(form.zip)) e.zip = 'ZIP code must be 5 digits'
+    return e
+  }, [form])
+
+  const isValid = Object.keys(errors).length === 0
+  const showError = (field: FieldKey) => Boolean(errors[field]) && (touched[field] || submitAttempted)
 
   function set(field: keyof typeof form) {
     return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((prev) => ({ ...prev, [field]: e.target.value }))
   }
 
+  function markTouched(field: FieldKey) {
+    return () => setTouched((prev) => ({ ...prev, [field]: true }))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (status === 'loading') return
+    setSubmitAttempted(true)
+    if (status === 'loading' || !isValid) return
 
     setStatus('loading')
+    setErrorMessage(null)
 
     try {
       const res = await fetch('/api/waitlist', {
@@ -77,13 +137,17 @@ export function WaitlistForm() {
         body: JSON.stringify(form),
       })
 
+      const data = await res.json().catch(() => ({}))
+
       if (res.ok) {
         setStatus('success')
       } else {
         setStatus('error')
+        setErrorMessage(typeof data?.error === 'string' ? data.error : `Request failed (${res.status})`)
       }
-    } catch {
+    } catch (err) {
       setStatus('error')
+      setErrorMessage(err instanceof Error ? err.message : 'Network error')
     }
   }
 
@@ -179,28 +243,37 @@ export function WaitlistForm() {
                       />
                     </Field>
 
-                    <Field label="Email" required>
+                    <Field label="Email" required error={showError('email') ? errors.email : undefined}>
                       <input
                         type="email"
                         value={form.email}
                         onChange={set('email')}
+                        onBlur={(e) => {
+                          markTouched('email')()
+                          Object.assign(e.currentTarget.style, showError('email') ? errorStyle : blurStyle)
+                        }}
                         placeholder="sarah@example.com"
                         required
+                        aria-invalid={showError('email') || undefined}
                         disabled={status === 'loading'}
-                        style={inputStyle}
+                        style={{ ...inputStyle, ...(showError('email') ? errorStyle : null) }}
                         onFocus={(e) => Object.assign(e.currentTarget.style, focusStyle)}
-                        onBlur={(e) => Object.assign(e.currentTarget.style, blurStyle)}
                       />
                     </Field>
 
-                    <Field label="Age range" required>
+                    <Field label="Age range" required error={showError('age') ? errors.age : undefined}>
                       <select
                         value={form.age}
-                        onChange={set('age')}
+                        onChange={(e) => {
+                          set('age')(e)
+                          markTouched('age')()
+                        }}
                         required
+                        aria-invalid={showError('age') || undefined}
                         disabled={status === 'loading'}
                         style={{
                           ...inputStyle,
+                          ...(showError('age') ? errorStyle : null),
                           appearance: 'none',
                           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E")`,
                           backgroundRepeat: 'no-repeat',
@@ -209,7 +282,15 @@ export function WaitlistForm() {
                           color: form.age ? '#ffffff' : 'rgba(255,255,255,0.45)',
                         }}
                         onFocus={(e) => Object.assign(e.currentTarget.style, { ...focusStyle, color: '#ffffff' })}
-                        onBlur={(e) => Object.assign(e.currentTarget.style, { ...blurStyle, color: form.age ? '#ffffff' : 'rgba(255,255,255,0.45)' })}
+                        onBlur={(e) => {
+                          markTouched('age')()
+                          Object.assign(
+                            e.currentTarget.style,
+                            showError('age')
+                              ? { ...errorStyle, color: form.age ? '#ffffff' : 'rgba(255,255,255,0.45)' }
+                              : { ...blurStyle, color: form.age ? '#ffffff' : 'rgba(255,255,255,0.45)' },
+                          )
+                        }}
                       >
                         <option value="" disabled style={{ color: '#151c27', background: '#1e3a8a' }}>Select your age range</option>
                         {AGE_RANGES.map((r) => (
@@ -218,7 +299,7 @@ export function WaitlistForm() {
                       </select>
                     </Field>
 
-                    <Field label="ZIP code" required>
+                    <Field label="ZIP code" required error={showError('zip') ? errors.zip : undefined}>
                       <input
                         type="text"
                         value={form.zip}
@@ -226,22 +307,29 @@ export function WaitlistForm() {
                           const v = e.target.value.replace(/\D/g, '').slice(0, 5)
                           setForm((prev) => ({ ...prev, zip: v }))
                         }}
+                        onBlur={(e) => {
+                          markTouched('zip')()
+                          Object.assign(e.currentTarget.style, showError('zip') ? errorStyle : blurStyle)
+                        }}
                         placeholder="90210"
                         required
                         pattern="\d{5}"
                         inputMode="numeric"
                         maxLength={5}
+                        aria-invalid={showError('zip') || undefined}
                         disabled={status === 'loading'}
-                        style={inputStyle}
+                        style={{ ...inputStyle, ...(showError('zip') ? errorStyle : null) }}
                         onFocus={(e) => Object.assign(e.currentTarget.style, focusStyle)}
-                        onBlur={(e) => Object.assign(e.currentTarget.style, blurStyle)}
                       />
                     </Field>
                   </div>
 
+                  {(() => {
+                    const submitDisabled = status === 'loading' || !isValid
+                    return (
                   <button
                     type="submit"
-                    disabled={status === 'loading'}
+                    disabled={submitDisabled}
                     className="font-headline font-bold"
                     style={{
                       width: '100%',
@@ -251,14 +339,14 @@ export function WaitlistForm() {
                       color: '#004ac6',
                       border: 'none',
                       fontSize: '16px',
-                      cursor: status === 'loading' ? 'not-allowed' : 'pointer',
-                      opacity: status === 'loading' ? 0.7 : 1,
+                      cursor: submitDisabled ? 'not-allowed' : 'pointer',
+                      opacity: submitDisabled ? 0.55 : 1,
                       transition: 'background 150ms ease, transform 150ms ease',
                       boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
                       marginTop: '8px',
                     }}
                     onMouseEnter={(e) => {
-                      if (status !== 'loading') {
+                      if (!submitDisabled) {
                         (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.92)'
                         ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
                       }
@@ -270,10 +358,18 @@ export function WaitlistForm() {
                   >
                     {status === 'loading' ? 'Joining...' : 'Request early access'}
                   </button>
+                    )
+                  })()}
+
+                  {submitAttempted && !isValid && status !== 'loading' && (
+                    <p className="font-body" style={{ fontSize: '13px', color: '#ffb4b4', marginTop: '12px', textAlign: 'center' }}>
+                      Please fill in the highlighted fields above.
+                    </p>
+                  )}
 
                   {status === 'error' && (
                     <p className="font-body" style={{ fontSize: '14px', color: 'rgba(255,150,150,1)', marginTop: '12px', textAlign: 'center' }}>
-                      Something went wrong. Try again.
+                      {errorMessage || 'Something went wrong. Try again.'}
                     </p>
                   )}
                 </form>

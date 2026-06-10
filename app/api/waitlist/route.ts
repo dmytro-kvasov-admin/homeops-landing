@@ -38,9 +38,29 @@ export async function POST(request: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const adminEmail = process.env.RESEND_ADMIN_EMAIL || 'homeopsaiapp@gmail.com'
   // Resend's shared sender — works without a verified domain.
+  // Note: with `onboarding@resend.dev`, Resend only allows sending to the
+  // email that owns the Resend account. To send to arbitrary signups you
+  // must verify a domain at resend.com/domains.
   const fromAddress = 'HomeOps <onboarding@resend.dev>'
 
+  const errorPayload = (label: string, detail: unknown, status = 500) => {
+    const message = detail instanceof Error
+      ? detail.message
+      : typeof detail === 'string'
+        ? detail
+        : detail && typeof detail === 'object' && 'message' in detail && typeof (detail as { message: unknown }).message === 'string'
+          ? (detail as { message: string }).message
+          : 'Unknown error'
+    console.error(`[waitlist] ${label}:`, detail)
+    return Response.json(
+      { error: `${label}: ${message}`, detail },
+      { status },
+    )
+  }
+
   try {
+    console.log('[waitlist] incoming signup', { email, name, age, zip, from: fromAddress, adminEmail })
+
     const userResult = await resend.emails.send({
       from: fromAddress,
       replyTo: adminEmail,
@@ -48,9 +68,9 @@ export async function POST(request: Request) {
       subject: "You're on the HomeOps waitlist",
       html: userConfirmationEmail(name),
     })
+    console.log('[waitlist] user email result', userResult)
     if (userResult.error) {
-      console.error('Resend user email error:', userResult.error)
-      return Response.json({ error: 'Failed to join waitlist' }, { status: 500 })
+      return errorPayload('User confirmation send failed', userResult.error)
     }
 
     const adminResult = await resend.emails.send({
@@ -60,17 +80,14 @@ export async function POST(request: Request) {
       subject: `New waitlist signup: ${email}`,
       html: adminNotificationEmail(name, email, age, zip),
     })
+    console.log('[waitlist] admin email result', adminResult)
     if (adminResult.error) {
-      console.error('Resend admin email error:', adminResult.error)
+      // User mail already sent — surface the admin error but still treat overall as success.
+      console.error('[waitlist] admin send error (non-fatal):', adminResult.error)
     }
 
-    return Response.json({ success: true })
+    return Response.json({ success: true, userId: userResult.data?.id, adminId: adminResult.data?.id })
   } catch (err) {
-    console.error('Resend exception:', err)
-    const message = err instanceof Error ? err.message : 'Unknown error'
-    if (message.includes('already exists') || message.includes('duplicate')) {
-      return Response.json({ success: true })
-    }
-    return Response.json({ error: 'Failed to join waitlist' }, { status: 500 })
+    return errorPayload('Resend exception', err)
   }
 }
