@@ -38,10 +38,14 @@ export async function POST(request: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY)
   const adminEmail = process.env.RESEND_ADMIN_EMAIL || 'homeopsaiapp@gmail.com'
   // Resend's shared sender — works without a verified domain.
-  // Note: with `onboarding@resend.dev`, Resend only allows sending to the
-  // email that owns the Resend account. To send to arbitrary signups you
-  // must verify a domain at resend.com/domains.
-  const fromAddress = 'HomeOps <onboarding@resend.dev>'
+  // Until a domain is verified, this sender can only deliver to the Resend
+  // account owner's address (i.e. `adminEmail`). Flip RESEND_DOMAIN_VERIFIED=true
+  // and update `fromAddress` once homeops.us (or .com) is verified at
+  // resend.com/domains.
+  const domainVerified = process.env.RESEND_DOMAIN_VERIFIED === 'true'
+  const fromAddress = domainVerified
+    ? (process.env.RESEND_FROM_EMAIL || 'HomeOps <noreply@homeops.us>')
+    : 'HomeOps <onboarding@resend.dev>'
 
   const errorPayload = (label: string, detail: unknown, status = 500) => {
     const message = detail instanceof Error
@@ -59,20 +63,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    console.log('[waitlist] incoming signup', { email, name, age, zip, from: fromAddress, adminEmail })
-
-    const userResult = await resend.emails.send({
+    console.log('[waitlist] incoming signup', {
+      email,
+      name,
+      age,
+      zip,
       from: fromAddress,
-      replyTo: adminEmail,
-      to: email,
-      subject: "You're on the HomeOps waitlist",
-      html: userConfirmationEmail(name),
+      adminEmail,
+      domainVerified,
     })
-    console.log('[waitlist] user email result', userResult)
-    if (userResult.error) {
-      return errorPayload('User confirmation send failed', userResult.error)
-    }
 
+    // Admin notification — always send. Uses customer email as replyTo so you
+    // can reply directly to the lead from your inbox.
     const adminResult = await resend.emails.send({
       from: fromAddress,
       replyTo: email,
@@ -82,11 +84,37 @@ export async function POST(request: Request) {
     })
     console.log('[waitlist] admin email result', adminResult)
     if (adminResult.error) {
-      // User mail already sent — surface the admin error but still treat overall as success.
-      console.error('[waitlist] admin send error (non-fatal):', adminResult.error)
+      return errorPayload('Admin notification send failed', adminResult.error)
     }
 
-    return Response.json({ success: true, userId: userResult.data?.id, adminId: adminResult.data?.id })
+    // Customer confirmation — only sent once a verified domain is configured.
+    // Without it, Resend's sandbox refuses any recipient that isn't the account owner.
+    let userId: string | undefined
+    if (domainVerified) {
+      const userResult = await resend.emails.send({
+        from: fromAddress,
+        replyTo: adminEmail,
+        to: email,
+        subject: "You're on the HomeOps waitlist",
+        html: userConfirmationEmail(name),
+      })
+      console.log('[waitlist] user email result', userResult)
+      if (userResult.error) {
+        // Lead is already captured — surface but don't fail the signup.
+        console.error('[waitlist] user send error (non-fatal):', userResult.error)
+      } else {
+        userId = userResult.data?.id
+      }
+    } else {
+      console.log('[waitlist] skipping user confirmation — domain not verified')
+    }
+
+    return Response.json({
+      success: true,
+      adminId: adminResult.data?.id,
+      userId,
+      confirmationEmailSent: Boolean(userId),
+    })
   } catch (err) {
     return errorPayload('Resend exception', err)
   }

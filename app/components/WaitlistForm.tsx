@@ -99,6 +99,7 @@ export function WaitlistForm() {
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [confirmationEmailSent, setConfirmationEmailSent] = useState(true)
 
   const errors = useMemo(() => {
     const e: Partial<Record<FieldKey, string>> = {}
@@ -140,6 +141,7 @@ export function WaitlistForm() {
       const data = await res.json().catch(() => ({}))
 
       if (res.ok) {
+        setConfirmationEmailSent(data?.confirmationEmailSent !== false)
         setStatus('success')
       } else {
         setStatus('error')
@@ -190,11 +192,13 @@ export function WaitlistForm() {
                   You&apos;re on the list
                 </h2>
                 <p className="font-body" style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '12px' }}>
-                  We&apos;ll reach out when early access opens. No spam, ever.
+                  We&apos;ll reach out at <strong style={{ color: 'rgba(255,255,255,0.95)' }}>{form.email}</strong> when early access opens. No spam, ever.
                 </p>
-                <p className="font-body" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.6' }}>
-                  A confirmation email is on its way to <strong style={{ color: 'rgba(255,255,255,0.8)' }}>{form.email}</strong>
-                </p>
+                {confirmationEmailSent && (
+                  <p className="font-body" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.6' }}>
+                    A confirmation email is on its way.
+                  </p>
+                )}
               </div>
             ) : (
               <>
