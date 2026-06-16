@@ -1,8 +1,7 @@
 'use client'
 
-import { useMemo, useState } from 'react'
-
-const AGE_RANGES = ['Under 18', '18–24', '25–34', '35–44', '45–54', '55–64', '65+']
+import { useEffect, useMemo, useRef, useState } from 'react'
+import posthog from 'posthog-js'
 
 const ERROR_BORDER = 'rgba(255,120,120,0.9)'
 const ERROR_SHADOW = '0 0 0 3px rgba(255,90,90,0.18)'
@@ -41,101 +40,143 @@ const errorStyle: React.CSSProperties = {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function Field({
-  label,
-  required,
-  error,
-  children,
-}: {
-  label: string
-  required?: boolean
-  error?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <label
-        style={{
-          fontSize: '12px',
-          fontWeight: 600,
-          color: error ? '#ffb4b4' : 'rgba(255,255,255,0.6)',
-          letterSpacing: '0.06em',
-          textTransform: 'uppercase',
-          fontFamily: 'var(--font-inter)',
-        }}
-      >
-        {label}
-        {required && <span style={{ color: '#ff8a8a', marginLeft: '4px' }}>*</span>}
-        {!required && (
-          <span style={{ fontWeight: 400, marginLeft: '6px', opacity: 0.6, textTransform: 'none', letterSpacing: 0 }}>
-            optional
-          </span>
-        )}
-      </label>
-      {children}
-      {error && (
-        <p
-          role="alert"
-          style={{
-            margin: 0,
-            fontSize: '12px',
-            color: '#ffb4b4',
-            fontFamily: 'var(--font-inter)',
-            lineHeight: 1.4,
-          }}
-        >
-          {error}
-        </p>
-      )}
-    </div>
-  )
+type ClientMetadata = {
+  userAgent?: string
+  language?: string
+  timezone?: string
+  viewport?: { width: number; height: number }
+  screen?: { width: number; height: number; dpr: number }
+  referrer?: string
+  landingUrl?: string
+  submitUrl?: string
+  utm?: {
+    source?: string
+    medium?: string
+    campaign?: string
+    term?: string
+    content?: string
+  }
+  gclid?: string
+  fbclid?: string
+  connection?: string
+  timeOnPageMs?: number
 }
 
-type FieldKey = 'email' | 'age' | 'zip'
+function collectMetadata(landingUrl: string, mountedAt: number, landingReferrer: string): ClientMetadata {
+  if (typeof window === 'undefined') return {}
+  const nav = window.navigator
+
+  let timezone: string | undefined
+  try {
+    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  } catch {
+    // older browsers / blocked APIs — leave undefined
+  }
+
+  let connection: string | undefined
+  const conn = (nav as Navigator & { connection?: { effectiveType?: string } }).connection
+  if (conn && typeof conn.effectiveType === 'string') connection = conn.effectiveType
+
+  let utm: ClientMetadata['utm']
+  let gclid: string | undefined
+  let fbclid: string | undefined
+  try {
+    const initial = new URL(landingUrl)
+    const params = initial.searchParams
+    const candidate = {
+      source: params.get('utm_source') || undefined,
+      medium: params.get('utm_medium') || undefined,
+      campaign: params.get('utm_campaign') || undefined,
+      term: params.get('utm_term') || undefined,
+      content: params.get('utm_content') || undefined,
+    }
+    if (Object.values(candidate).some(Boolean)) utm = candidate
+    gclid = params.get('gclid') || undefined
+    fbclid = params.get('fbclid') || undefined
+  } catch {
+    // invalid URL — ignore
+  }
+
+  return {
+    userAgent: nav.userAgent,
+    language: nav.language,
+    timezone,
+    viewport: { width: window.innerWidth, height: window.innerHeight },
+    screen: {
+      width: window.screen.width,
+      height: window.screen.height,
+      dpr: window.devicePixelRatio,
+    },
+    referrer: landingReferrer || undefined,
+    landingUrl,
+    submitUrl: window.location.href,
+    utm,
+    gclid,
+    fbclid,
+    connection,
+    timeOnPageMs: Date.now() - mountedAt,
+  }
+}
 
 export function WaitlistForm() {
-  const [form, setForm] = useState({ name: '', email: '', age: '', zip: '' })
-  const [touched, setTouched] = useState<Record<FieldKey, boolean>>({ email: false, age: false, zip: false })
+  const [email, setEmail] = useState('')
+  const [touched, setTouched] = useState(false)
   const [submitAttempted, setSubmitAttempted] = useState(false)
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [confirmationEmailSent, setConfirmationEmailSent] = useState(true)
 
-  const errors = useMemo(() => {
-    const e: Partial<Record<FieldKey, string>> = {}
-    if (!form.email.trim()) e.email = 'Email is required'
-    else if (!EMAIL_RE.test(form.email.trim())) e.email = 'Enter a valid email address'
-    if (!form.age) e.age = 'Age range is required'
-    if (!form.zip) e.zip = 'ZIP code is required'
-    else if (!/^\d{5}$/.test(form.zip)) e.zip = 'ZIP code must be 5 digits'
-    return e
-  }, [form])
+  const mountedAtRef = useRef<number>(0)
+  const landingUrlRef = useRef<string>('')
+  const landingReferrerRef = useRef<string>('')
+  const focusedOnceRef = useRef(false)
 
-  const isValid = Object.keys(errors).length === 0
-  const showError = (field: FieldKey) => Boolean(errors[field]) && (touched[field] || submitAttempted)
+  useEffect(() => {
+    mountedAtRef.current = Date.now()
+    landingUrlRef.current = window.location.href
+    landingReferrerRef.current = document.referrer
+    posthog.capture('waitlist_form_viewed')
+  }, [])
 
-  function set(field: keyof typeof form) {
-    return (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-      setForm((prev) => ({ ...prev, [field]: e.target.value }))
-  }
+  const emailError = useMemo(() => {
+    if (!email.trim()) return 'Email is required'
+    if (!EMAIL_RE.test(email.trim())) return 'Enter a valid email address'
+    return null
+  }, [email])
 
-  function markTouched(field: FieldKey) {
-    return () => setTouched((prev) => ({ ...prev, [field]: true }))
-  }
+  const isValid = emailError === null
+  const showError = Boolean(emailError) && (touched || submitAttempted)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitAttempted(true)
-    if (status === 'loading' || !isValid) return
+
+    posthog.capture('waitlist_submit_clicked', {
+      valid: isValid,
+      time_on_page_ms: Date.now() - (mountedAtRef.current || Date.now()),
+    })
+
+    if (status === 'loading') return
+    if (!isValid) {
+      posthog.capture('waitlist_submit_invalid', { reason: emailError ?? 'unknown' })
+      return
+    }
 
     setStatus('loading')
     setErrorMessage(null)
+
+    const trimmedEmail = email.trim()
+    const metadata = collectMetadata(
+      landingUrlRef.current || (typeof window !== 'undefined' ? window.location.href : ''),
+      mountedAtRef.current || Date.now(),
+      landingReferrerRef.current,
+    )
 
     try {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ email: trimmedEmail, metadata }),
       })
 
       const data = await res.json().catch(() => ({}))
@@ -143,13 +184,24 @@ export function WaitlistForm() {
       if (res.ok) {
         setConfirmationEmailSent(data?.confirmationEmailSent !== false)
         setStatus('success')
+        posthog.identify(trimmedEmail, { email: trimmedEmail })
+        posthog.capture('waitlist_signup_success', {
+          time_on_page_ms: Date.now() - (mountedAtRef.current || Date.now()),
+        })
       } else {
         setStatus('error')
-        setErrorMessage(typeof data?.error === 'string' ? data.error : `Request failed (${res.status})`)
+        const message = typeof data?.error === 'string' ? data.error : `Request failed (${res.status})`
+        setErrorMessage(message)
+        posthog.capture('waitlist_signup_failed', {
+          status: res.status,
+          error: message,
+        })
       }
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Network error'
       setStatus('error')
-      setErrorMessage(err instanceof Error ? err.message : 'Network error')
+      setErrorMessage(message)
+      posthog.capture('waitlist_signup_failed', { status: 0, error: message })
     }
   }
 
@@ -192,7 +244,7 @@ export function WaitlistForm() {
                   You&apos;re on the list
                 </h2>
                 <p className="font-body" style={{ fontSize: '18px', color: 'rgba(255,255,255,0.8)', lineHeight: '1.6', marginBottom: '12px' }}>
-                  We&apos;ll reach out at <strong style={{ color: 'rgba(255,255,255,0.95)' }}>{form.email}</strong> when early access opens. No spam, ever.
+                  We&apos;ll reach out at <strong style={{ color: 'rgba(255,255,255,0.95)' }}>{email}</strong> when early access opens. No spam, ever.
                 </p>
                 {confirmationEmailSent && (
                   <p className="font-body" style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)', lineHeight: '1.6' }}>
@@ -225,151 +277,103 @@ export function WaitlistForm() {
                 </div>
 
                 <form onSubmit={handleSubmit} noValidate>
-                  {/* 2-column grid */}
                   <div
                     style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-                      gap: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
                       marginBottom: '16px',
                     }}
                   >
-                    <Field label="First name">
-                      <input
-                        type="text"
-                        value={form.name}
-                        onChange={set('name')}
-                        placeholder="Sarah"
-                        disabled={status === 'loading'}
-                        style={inputStyle}
-                        onFocus={(e) => Object.assign(e.currentTarget.style, focusStyle)}
-                        onBlur={(e) => Object.assign(e.currentTarget.style, blurStyle)}
-                      />
-                    </Field>
-
-                    <Field label="Email" required error={showError('email') ? errors.email : undefined}>
-                      <input
-                        type="email"
-                        value={form.email}
-                        onChange={set('email')}
-                        onBlur={(e) => {
-                          markTouched('email')()
-                          Object.assign(e.currentTarget.style, showError('email') ? errorStyle : blurStyle)
-                        }}
-                        placeholder="sarah@example.com"
-                        required
-                        aria-invalid={showError('email') || undefined}
-                        disabled={status === 'loading'}
-                        style={{ ...inputStyle, ...(showError('email') ? errorStyle : null) }}
-                        onFocus={(e) => Object.assign(e.currentTarget.style, focusStyle)}
-                      />
-                    </Field>
-
-                    <Field label="Age range" required error={showError('age') ? errors.age : undefined}>
-                      <select
-                        value={form.age}
-                        onChange={(e) => {
-                          set('age')(e)
-                          markTouched('age')()
-                        }}
-                        required
-                        aria-invalid={showError('age') || undefined}
-                        disabled={status === 'loading'}
+                    <label
+                      htmlFor="waitlist-email"
+                      style={{
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: showError ? '#ffb4b4' : 'rgba(255,255,255,0.6)',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        fontFamily: 'var(--font-inter)',
+                      }}
+                    >
+                      Email
+                      <span style={{ color: '#ff8a8a', marginLeft: '4px' }}>*</span>
+                    </label>
+                    <input
+                      id="waitlist-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onBlur={(e) => {
+                        setTouched(true)
+                        Object.assign(e.currentTarget.style, showError ? errorStyle : blurStyle)
+                      }}
+                      placeholder="sarah@example.com"
+                      autoComplete="email"
+                      required
+                      aria-invalid={showError || undefined}
+                      disabled={status === 'loading'}
+                      style={{ ...inputStyle, ...(showError ? errorStyle : null) }}
+                      onFocus={(e) => {
+                        Object.assign(e.currentTarget.style, focusStyle)
+                        if (!focusedOnceRef.current) {
+                          focusedOnceRef.current = true
+                          posthog.capture('waitlist_email_focused')
+                        }
+                      }}
+                    />
+                    {showError && emailError && (
+                      <p
+                        role="alert"
                         style={{
-                          ...inputStyle,
-                          ...(showError('age') ? errorStyle : null),
-                          appearance: 'none',
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.5)' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 16px center',
-                          paddingRight: '40px',
-                          color: form.age ? '#ffffff' : 'rgba(255,255,255,0.45)',
-                        }}
-                        onFocus={(e) => Object.assign(e.currentTarget.style, { ...focusStyle, color: '#ffffff' })}
-                        onBlur={(e) => {
-                          markTouched('age')()
-                          Object.assign(
-                            e.currentTarget.style,
-                            showError('age')
-                              ? { ...errorStyle, color: form.age ? '#ffffff' : 'rgba(255,255,255,0.45)' }
-                              : { ...blurStyle, color: form.age ? '#ffffff' : 'rgba(255,255,255,0.45)' },
-                          )
+                          margin: 0,
+                          fontSize: '12px',
+                          color: '#ffb4b4',
+                          fontFamily: 'var(--font-inter)',
+                          lineHeight: 1.4,
                         }}
                       >
-                        <option value="" disabled style={{ color: '#151c27', background: '#1e3a8a' }}>Select your age range</option>
-                        {AGE_RANGES.map((r) => (
-                          <option key={r} value={r} style={{ color: '#151c27', background: '#ffffff' }}>{r}</option>
-                        ))}
-                      </select>
-                    </Field>
-
-                    <Field label="ZIP code" required error={showError('zip') ? errors.zip : undefined}>
-                      <input
-                        type="text"
-                        value={form.zip}
-                        onChange={(e) => {
-                          const v = e.target.value.replace(/\D/g, '').slice(0, 5)
-                          setForm((prev) => ({ ...prev, zip: v }))
-                        }}
-                        onBlur={(e) => {
-                          markTouched('zip')()
-                          Object.assign(e.currentTarget.style, showError('zip') ? errorStyle : blurStyle)
-                        }}
-                        placeholder="90210"
-                        required
-                        pattern="\d{5}"
-                        inputMode="numeric"
-                        maxLength={5}
-                        aria-invalid={showError('zip') || undefined}
-                        disabled={status === 'loading'}
-                        style={{ ...inputStyle, ...(showError('zip') ? errorStyle : null) }}
-                        onFocus={(e) => Object.assign(e.currentTarget.style, focusStyle)}
-                      />
-                    </Field>
+                        {emailError}
+                      </p>
+                    )}
                   </div>
 
                   {(() => {
                     const submitDisabled = status === 'loading' || !isValid
                     return (
-                  <button
-                    type="submit"
-                    disabled={submitDisabled}
-                    className="font-headline font-bold"
-                    style={{
-                      width: '100%',
-                      padding: '16px 28px',
-                      borderRadius: '12px',
-                      background: '#ffffff',
-                      color: '#004ac6',
-                      border: 'none',
-                      fontSize: '16px',
-                      cursor: submitDisabled ? 'not-allowed' : 'pointer',
-                      opacity: submitDisabled ? 0.55 : 1,
-                      transition: 'background 150ms ease, transform 150ms ease',
-                      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-                      marginTop: '8px',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!submitDisabled) {
-                        (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.92)'
-                        ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'
-                      ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'
-                    }}
-                  >
-                    {status === 'loading' ? 'Joining...' : 'Request early access'}
-                  </button>
+                      <button
+                        type="submit"
+                        disabled={submitDisabled}
+                        className="font-headline font-bold"
+                        style={{
+                          width: '100%',
+                          padding: '16px 28px',
+                          borderRadius: '12px',
+                          background: '#ffffff',
+                          color: '#004ac6',
+                          border: 'none',
+                          fontSize: '16px',
+                          cursor: submitDisabled ? 'not-allowed' : 'pointer',
+                          opacity: submitDisabled ? 0.55 : 1,
+                          transition: 'background 150ms ease, transform 150ms ease',
+                          boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                          marginTop: '8px',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!submitDisabled) {
+                            (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.92)'
+                            ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLButtonElement).style.background = '#ffffff'
+                          ;(e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'
+                        }}
+                      >
+                        {status === 'loading' ? 'Joining...' : 'Request early access'}
+                      </button>
                     )
                   })()}
-
-                  {submitAttempted && !isValid && status !== 'loading' && (
-                    <p className="font-body" style={{ fontSize: '13px', color: '#ffb4b4', marginTop: '12px', textAlign: 'center' }}>
-                      Please fill in the highlighted fields above.
-                    </p>
-                  )}
 
                   {status === 'error' && (
                     <p className="font-body" style={{ fontSize: '14px', color: 'rgba(255,150,150,1)', marginTop: '12px', textAlign: 'center' }}>
@@ -378,43 +382,18 @@ export function WaitlistForm() {
                   )}
                 </form>
 
-                {/* Privacy block */}
-                <div
+                <p
+                  className="font-body"
                   style={{
-                    marginTop: '32px',
-                    paddingTop: '24px',
-                    borderTop: '1px solid rgba(255,255,255,0.12)',
+                    marginTop: '24px',
+                    fontSize: '13px',
+                    color: 'rgba(255,255,255,0.5)',
+                    textAlign: 'center',
+                    lineHeight: 1.6,
                   }}
                 >
-                  <p
-                    className="font-label"
-                    style={{ fontSize: '11px', fontWeight: 700, color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '14px' }}
-                  >
-                    Why we ask &amp; how we protect your data
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {[
-                      { icon: 'info', text: 'We collect name, email, age, and ZIP to personalize your early access experience and estimate regional savings.' },
-                      { icon: 'block', text: 'Your data is never sold or shared with advertisers, data brokers, or third parties.' },
-                      { icon: 'lock', text: 'We never use your information for advertising, profiling, or targeting.' },
-                    ].map((item) => (
-                      <div key={item.icon} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                        <span
-                          className="material-symbols-outlined"
-                          style={{ fontSize: '16px', color: 'rgba(255,255,255,0.45)', flexShrink: 0, marginTop: '1px' }}
-                        >
-                          {item.icon}
-                        </span>
-                        <p className="font-body" style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', lineHeight: '1.55', margin: 0 }}>
-                          {item.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="font-body" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginTop: '16px' }}>
-                    No credit card required &middot; Invite-only access &middot; Launching summer 2026
-                  </p>
-                </div>
+                  Email only. No name, address, or phone. Unsubscribe anytime — we don&apos;t sell or share your data.
+                </p>
               </>
             )}
           </div>

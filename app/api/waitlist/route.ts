@@ -1,14 +1,38 @@
 import { Resend } from 'resend'
 import { z } from 'zod'
-import { userConfirmationEmail, adminNotificationEmail } from '@/app/lib/emails'
+import { userConfirmationEmail, adminNotificationEmail, type ClientMetadata } from '@/app/lib/emails'
 
 export const runtime = 'edge'
 
+const metadataSchema = z
+  .object({
+    userAgent: z.string().max(500).optional(),
+    language: z.string().max(50).optional(),
+    timezone: z.string().max(100).optional(),
+    viewport: z.object({ width: z.number(), height: z.number() }).optional(),
+    screen: z.object({ width: z.number(), height: z.number(), dpr: z.number() }).optional(),
+    referrer: z.string().max(1000).optional(),
+    landingUrl: z.string().max(1000).optional(),
+    submitUrl: z.string().max(1000).optional(),
+    utm: z
+      .object({
+        source: z.string().max(200).optional(),
+        medium: z.string().max(200).optional(),
+        campaign: z.string().max(200).optional(),
+        term: z.string().max(200).optional(),
+        content: z.string().max(200).optional(),
+      })
+      .optional(),
+    gclid: z.string().max(200).optional(),
+    fbclid: z.string().max(200).optional(),
+    connection: z.string().max(20).optional(),
+    timeOnPageMs: z.number().optional(),
+  })
+  .optional()
+
 const schema = z.object({
   email: z.string().email('Invalid email address'),
-  name: z.string().max(100).optional(),
-  age: z.string().optional(),
-  zip: z.string().regex(/^\d{5}$/, 'ZIP code must be 5 digits').optional(),
+  metadata: metadataSchema,
 })
 
 export async function POST(request: Request) {
@@ -34,7 +58,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { email, name, age, zip } = parsed.data
+  const { email, metadata } = parsed.data
   const resend = new Resend(process.env.RESEND_API_KEY)
   const adminEmail = process.env.RESEND_ADMIN_EMAIL || 'homeopsaiapp@gmail.com'
   // Resend's shared sender — works without a verified domain.
@@ -62,12 +86,28 @@ export async function POST(request: Request) {
     )
   }
 
+  // Pull request-side signals we couldn't get from the browser.
+  const requestMeta = {
+    ip:
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+      request.headers.get('x-real-ip') ||
+      undefined,
+    country: request.headers.get('x-vercel-ip-country') || undefined,
+    region: request.headers.get('x-vercel-ip-country-region') || undefined,
+    city: request.headers.get('x-vercel-ip-city')
+      ? decodeURIComponent(request.headers.get('x-vercel-ip-city') as string)
+      : undefined,
+  }
+
+  const fullMetadata: ClientMetadata & typeof requestMeta = {
+    ...(metadata ?? {}),
+    ...requestMeta,
+  }
+
   try {
     console.log('[waitlist] incoming signup', {
       email,
-      name,
-      age,
-      zip,
+      metadata: fullMetadata,
       from: fromAddress,
       adminEmail,
       domainVerified,
@@ -80,7 +120,7 @@ export async function POST(request: Request) {
       replyTo: email,
       to: adminEmail,
       subject: `New waitlist signup: ${email}`,
-      html: adminNotificationEmail(name, email, age, zip),
+      html: adminNotificationEmail(email, fullMetadata),
     })
     console.log('[waitlist] admin email result', adminResult)
     if (adminResult.error) {
@@ -96,7 +136,7 @@ export async function POST(request: Request) {
         replyTo: adminEmail,
         to: email,
         subject: "You're on the HomeOps waitlist",
-        html: userConfirmationEmail(name),
+        html: userConfirmationEmail(),
       })
       console.log('[waitlist] user email result', userResult)
       if (userResult.error) {

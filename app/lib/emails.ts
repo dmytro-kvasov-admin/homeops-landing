@@ -1,3 +1,29 @@
+export type ClientMetadata = {
+  userAgent?: string
+  language?: string
+  timezone?: string
+  viewport?: { width: number; height: number }
+  screen?: { width: number; height: number; dpr: number }
+  referrer?: string
+  landingUrl?: string
+  submitUrl?: string
+  utm?: {
+    source?: string
+    medium?: string
+    campaign?: string
+    term?: string
+    content?: string
+  }
+  gclid?: string
+  fbclid?: string
+  connection?: string
+  timeOnPageMs?: number
+  ip?: string
+  country?: string
+  region?: string
+  city?: string
+}
+
 function escape(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -6,9 +32,7 @@ function escape(str: string): string {
     .replace(/"/g, '&quot;')
 }
 
-export function userConfirmationEmail(name: string | undefined): string {
-  const greeting = name ? `Hi ${escape(name)},` : 'Hi,'
-
+export function userConfirmationEmail(): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +52,7 @@ export function userConfirmationEmail(name: string | undefined): string {
 <tr>
   <td style="background-color:#ffffff;padding:40px;">
     <h1 style="font-size:22px;font-weight:700;color:#151c27;margin:0 0 20px;line-height:1.3;font-family:system-ui,-apple-system,sans-serif;">Got it. You're on the list.</h1>
-    <p style="font-size:15px;color:#434655;line-height:1.7;margin:0 0 12px;font-family:system-ui,-apple-system,sans-serif;">${greeting}</p>
+    <p style="font-size:15px;color:#434655;line-height:1.7;margin:0 0 12px;font-family:system-ui,-apple-system,sans-serif;">Hi there,</p>
     <p style="font-size:15px;color:#434655;line-height:1.7;margin:0 0 12px;font-family:system-ui,-apple-system,sans-serif;">Your early access request is confirmed. We're launching summer 2026. When we open the doors, you're first in line.</p>
     <p style="font-size:15px;color:#434655;line-height:1.7;margin:0 0 28px;font-family:system-ui,-apple-system,sans-serif;">No lottery. No credit card to hold your spot.</p>
     <div style="border-top:1px solid #e8eaf2;margin-bottom:28px;"></div>
@@ -63,12 +87,36 @@ export function userConfirmationEmail(name: string | undefined): string {
 </html>`
 }
 
-export function adminNotificationEmail(
-  name: string | undefined,
-  email: string,
-  age: string | undefined,
-  zip: string | undefined,
-): string {
+function formatViewport(v?: { width: number; height: number }) {
+  return v ? `${v.width}×${v.height}` : undefined
+}
+
+function formatScreen(s?: { width: number; height: number; dpr: number }) {
+  return s ? `${s.width}×${s.height} @${s.dpr}x` : undefined
+}
+
+function formatLocation(meta: ClientMetadata) {
+  const parts = [meta.city, meta.region, meta.country].filter(Boolean)
+  return parts.length > 0 ? parts.join(', ') : undefined
+}
+
+function formatUtm(utm?: ClientMetadata['utm']) {
+  if (!utm) return undefined
+  const entries = Object.entries(utm).filter(([, v]) => Boolean(v))
+  if (entries.length === 0) return undefined
+  return entries.map(([k, v]) => `${k}=${v}`).join(' / ')
+}
+
+function formatTimeOnPage(ms?: number) {
+  if (typeof ms !== 'number') return undefined
+  const seconds = Math.round(ms / 1000)
+  if (seconds < 60) return `${seconds}s`
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}m ${s}s`
+}
+
+export function adminNotificationEmail(email: string, meta: ClientMetadata): string {
   const now = new Date().toLocaleString('en-US', {
     timeZone: 'America/New_York',
     year: 'numeric',
@@ -78,11 +126,34 @@ export function adminNotificationEmail(
     minute: '2-digit',
   })
 
-  const row = (label: string, value: string) =>
-    `<tr>
-      <td style="font-size:12px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:10px 0;border-bottom:1px solid #f0f0f0;width:100px;white-space:nowrap;font-family:system-ui,-apple-system,sans-serif;">${label}</td>
-      <td style="font-size:14px;color:#151c27;padding:10px 0 10px 16px;border-bottom:1px solid #f0f0f0;font-family:system-ui,-apple-system,sans-serif;">${value}</td>
+  const row = (label: string, value: string | undefined) => {
+    if (!value) return ''
+    return `<tr>
+      <td style="font-size:12px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:0.06em;padding:10px 0;border-bottom:1px solid #f0f0f0;width:130px;white-space:nowrap;vertical-align:top;font-family:system-ui,-apple-system,sans-serif;">${label}</td>
+      <td style="font-size:14px;color:#151c27;padding:10px 0 10px 16px;border-bottom:1px solid #f0f0f0;word-break:break-word;font-family:system-ui,-apple-system,sans-serif;">${escape(value)}</td>
     </tr>`
+  }
+
+  const rows = [
+    row('Email', email),
+    row('Source', formatUtm(meta.utm)),
+    row('GCLID', meta.gclid),
+    row('FBCLID', meta.fbclid),
+    row('Referrer', meta.referrer),
+    row('Landing URL', meta.landingUrl),
+    row('Submit URL', meta.submitUrl !== meta.landingUrl ? meta.submitUrl : undefined),
+    row('Location', formatLocation(meta)),
+    row('IP', meta.ip),
+    row('Timezone', meta.timezone),
+    row('Language', meta.language),
+    row('Connection', meta.connection),
+    row('Viewport', formatViewport(meta.viewport)),
+    row('Screen', formatScreen(meta.screen)),
+    row('Time on page', formatTimeOnPage(meta.timeOnPageMs)),
+    row('User agent', meta.userAgent),
+  ]
+    .filter(Boolean)
+    .join('')
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -94,7 +165,7 @@ export function adminNotificationEmail(
 <body style="margin:0;padding:0;background-color:#f4f6fb;font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f6fb;padding:40px 16px;">
 <tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;border-radius:12px;overflow:hidden;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;border-radius:12px;overflow:hidden;">
 <tr>
   <td style="background-color:#151c27;padding:20px 32px;">
     <span style="font-size:14px;font-weight:700;color:#ffffff;font-family:system-ui,-apple-system,sans-serif;">HomeOps / New waitlist signup</span>
@@ -103,10 +174,7 @@ export function adminNotificationEmail(
 <tr>
   <td style="background-color:#ffffff;padding:28px 32px;">
     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
-      ${row('Name', escape(name || '&mdash;'))}
-      ${row('Email', escape(email))}
-      ${row('Age range', escape(age || '&mdash;'))}
-      ${row('ZIP code', escape(zip || '&mdash;'))}
+      ${rows}
     </table>
     <p style="font-size:12px;color:#9ca3af;margin:16px 0 0;font-family:system-ui,-apple-system,sans-serif;">Signed up ${now} ET</p>
   </td>
