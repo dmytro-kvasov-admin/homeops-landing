@@ -37,7 +37,7 @@ export function HowItWorks() {
   return (
     <section
       id="features"
-      className="py-32 px-8"
+      className="py-16 px-4 sm:py-32 sm:px-8"
       aria-label="How it works"
     >
       <div className="container">
@@ -45,9 +45,9 @@ export function HowItWorks() {
           <h2
             className="font-headline text-on-surface"
             style={{
-              fontSize: 'clamp(36px, 5vw, 64px)',
+              fontSize: 'clamp(24px, 5vw, 64px)',
               fontWeight: 800,
-              lineHeight: 1,
+              lineHeight: 1.05,
               letterSpacing: '-0.03em',
             }}
           >
@@ -60,7 +60,7 @@ export function HowItWorks() {
             <div
               key={step.number}
               style={{
-                padding: '32px',
+                padding: 'clamp(20px, 4vw, 32px)',
                 borderRadius: '16px',
                 background: step.alt ? 'rgba(34,197,94,0.06)' : undefined,
                 border: step.alt ? '1px solid rgba(34,197,94,0.18)' : undefined,

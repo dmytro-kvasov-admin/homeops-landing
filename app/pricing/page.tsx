@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function PricingPage() {
   return (
-    <main className="container" style={{ paddingTop: '64px', paddingBottom: '96px' }}>
+    <main className="container" style={{ paddingTop: 'clamp(32px, 6vw, 64px)', paddingBottom: 'clamp(48px, 8vw, 96px)' }}>
       <div style={{ marginBottom: '56px', maxWidth: '520px' }}>
         <div className="section-label" style={{ marginBottom: '16px' }}>
           Pricing
@@ -25,8 +25,8 @@ export default function PricingPage() {
         <h1
           style={{
             fontFamily: 'var(--font-manrope), system-ui, sans-serif',
-            fontSize: 'clamp(36px, 4vw, 56px)',
-            lineHeight: '1.05',
+            fontSize: 'clamp(26px, 4vw, 56px)',
+            lineHeight: '1.1',
             fontWeight: 900,
             letterSpacing: '-0.03em',
             color: '#151c27',
@@ -54,7 +54,7 @@ export default function PricingPage() {
         {/* Free tier */}
         <div
           style={{
-            padding: '32px',
+            padding: 'clamp(20px, 4vw, 32px)',
             border: '1.5px solid rgba(195, 198, 215, 0.5)',
             borderRadius: '16px',
             background: '#ffffff',
@@ -160,7 +160,7 @@ export default function PricingPage() {
         {/* Pro tier — recommended */}
         <div
           style={{
-            padding: '40px',
+            padding: 'clamp(24px, 4vw, 40px)',
             background: '#151c27',
             color: '#f9f9ff',
             borderRadius: '20px',
@@ -281,7 +281,7 @@ export default function PricingPage() {
         {/* Family tier */}
         <div
           style={{
-            padding: '32px',
+            padding: 'clamp(20px, 4vw, 32px)',
             border: '1.5px solid rgba(195, 198, 215, 0.5)',
             borderRadius: '16px',
             background: '#ffffff',

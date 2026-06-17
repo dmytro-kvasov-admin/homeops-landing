@@ -3,7 +3,7 @@ import Image from 'next/image'
 export function ProductPreview() {
   return (
     <section
-      className="py-32 px-8 bg-surface-container-low"
+      className="py-16 px-4 sm:py-32 sm:px-8 bg-surface-container-low"
       aria-label="App interface preview"
     >
       <div className="container">
@@ -11,14 +11,14 @@ export function ProductPreview() {
           <h2
             className="font-headline text-on-surface mb-6"
             style={{
-              fontSize: 'clamp(28px, 4vw, 48px)',
+              fontSize: 'clamp(22px, 4vw, 48px)',
               fontWeight: 800,
               letterSpacing: '-0.02em',
             }}
           >
             Designed for precision
           </h2>
-          <p className="font-body text-on-surface-variant" style={{ fontSize: '19px', lineHeight: '1.6', maxWidth: '560px', margin: '0 auto' }}>
+          <p className="font-body text-on-surface-variant" style={{ fontSize: 'clamp(15px, 2vw, 19px)', lineHeight: '1.6', maxWidth: '560px', margin: '0 auto' }}>
             The cleanest interface ever built for grocery management. Zero clutter, 100% utility.
           </p>
         </div>
@@ -31,7 +31,7 @@ export function ProductPreview() {
             height={1259}
             sizes="280px"
             style={{
-              width: '280px',
+              width: 'min(280px, 100%)',
               height: 'auto',
               display: 'block',
               borderRadius: '28px',
@@ -47,7 +47,7 @@ export function ProductPreview() {
             height={1513}
             sizes="280px"
             style={{
-              width: '280px',
+              width: 'min(280px, 100%)',
               height: 'auto',
               display: 'block',
               borderRadius: '28px',
@@ -62,7 +62,7 @@ export function ProductPreview() {
             height={1342}
             sizes="280px"
             style={{
-              width: '280px',
+              width: 'min(280px, 100%)',
               height: 'auto',
               display: 'block',
               borderRadius: '28px',

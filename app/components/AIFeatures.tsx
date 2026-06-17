@@ -33,7 +33,7 @@ const features = [
 export function AIFeatures() {
   return (
     <section
-      className="py-32 px-8"
+      className="py-16 px-4 sm:py-32 sm:px-8"
       aria-label="AI features"
     >
       <div className="container">
@@ -41,7 +41,7 @@ export function AIFeatures() {
 
           {/* Left — 2×2 staggered card grid */}
           <div className="lg:w-1/2 order-2 lg:order-1">
-            <div className="grid grid-cols-2" style={{ gap: '24px' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '20px' }}>
               {features.map((feature) => (
                 <div
                   key={feature.id}

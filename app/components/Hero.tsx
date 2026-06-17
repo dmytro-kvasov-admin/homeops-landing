@@ -41,7 +41,7 @@ export function Hero() {
   const copy = VARIANTS[variant]
 
   return (
-    <section className="relative overflow-hidden py-24 px-8">
+    <section className="relative overflow-hidden py-16 px-4 sm:py-24 sm:px-8">
       {/* Gradient ambient blob */}
       <div
         aria-hidden="true"
@@ -71,12 +71,13 @@ export function Hero() {
             <h1
               className="font-headline"
               style={{
-                fontSize: 'clamp(40px, 6vw, 72px)',
+                fontSize: 'clamp(28px, 6vw, 72px)',
                 lineHeight: '1.08',
                 fontWeight: 800,
                 letterSpacing: '-0.03em',
                 color: '#151c27',
                 marginBottom: '24px',
+                overflowWrap: 'break-word',
               }}
             >
               The grocery budget app that plans meals, compares prices, and{' '}
@@ -86,7 +87,7 @@ export function Hero() {
             <p
               className="font-body"
               style={{
-                fontSize: 'clamp(17px, 2vw, 20px)',
+                fontSize: 'clamp(15px, 2vw, 20px)',
                 lineHeight: '1.6',
                 color: '#434655',
                 marginBottom: '40px',
@@ -101,11 +102,12 @@ export function Hero() {
                 href="#waitlist"
                 className="btn-primary"
                 style={{
-                  padding: '16px 28px',
+                  padding: '14px 22px',
                   fontSize: '15px',
-                  whiteSpace: 'nowrap',
                   textDecoration: 'none',
                   display: 'inline-block',
+                  maxWidth: '100%',
+                  textAlign: 'center',
                 }}
               >
                 Request early access
@@ -117,23 +119,24 @@ export function Hero() {
             </p>
 
             {/* Social proof avatars */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center flex-wrap gap-3 sm:gap-4">
               <div className="flex" style={{ gap: 0 }}>
                 {avatars.map((av, i) => (
                   <div
                     key={i}
                     style={{
-                      width: '40px',
-                      height: '40px',
+                      width: '36px',
+                      height: '36px',
                       borderRadius: '50%',
                       border: '3px solid #f9f9ff',
                       overflow: 'hidden',
                       marginLeft: i > 0 ? '-10px' : '0',
                       position: 'relative',
                       zIndex: 3 - i,
+                      flexShrink: 0,
                     }}
                   >
-                    <Image src={av.src} alt={av.alt} width={40} height={40} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+                    <Image src={av.src} alt={av.alt} width={36} height={36} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
                   </div>
                 ))}
               </div>

@@ -48,9 +48,16 @@ export default function Home() {
           <a
             href="#waitlist"
             className="btn-primary"
-            style={{ padding: '10px 22px', fontSize: '14px', textDecoration: 'none' }}
+            style={{
+              padding: '10px 14px',
+              fontSize: '13px',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
           >
-            Request early access
+            <span className="sm:hidden">Join waitlist</span>
+            <span className="hidden sm:inline">Request early access</span>
           </a>
         </nav>
       </header>
@@ -62,13 +69,13 @@ export default function Home() {
         <Hero />
 
         {/* Yummly replacement callout */}
-        <div className="px-8" style={{ paddingBottom: '8px' }}>
+        <div className="px-4 sm:px-8" style={{ paddingBottom: '8px' }}>
           <div className="container">
             <div
               style={{
                 background: 'rgba(0,74,198,0.04)',
                 borderRadius: '12px',
-                padding: '18px 28px',
+                padding: 'clamp(14px, 4vw, 18px) clamp(16px, 4vw, 28px)',
                 border: '1px solid rgba(0,74,198,0.1)',
                 maxWidth: '680px',
                 margin: '0 auto',
@@ -93,7 +100,7 @@ export default function Home() {
         <ProductPreview />
 
         {/* FAQ section */}
-        <section id="faq" className="py-24 px-8" aria-label="Frequently asked questions">
+        <section id="faq" className="py-16 px-4 sm:py-24 sm:px-8" aria-label="Frequently asked questions">
           <div className="container">
             <h2
               className="font-headline text-on-surface"
@@ -152,7 +159,7 @@ export default function Home() {
       </main>
 
       {/* Footer — matches Stitch */}
-      <footer className="bg-surface-container-low py-16 px-8">
+      <footer className="bg-surface-container-low py-12 px-4 sm:py-16 sm:px-8">
         <div className="container">
           <div className="flex flex-col md:flex-row justify-between items-center" style={{ gap: '32px' }}>
 

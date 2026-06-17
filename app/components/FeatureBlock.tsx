@@ -1,7 +1,7 @@
 export function FeatureBlock() {
   return (
     <section
-      className="py-32 px-8"
+      className="py-16 px-4 sm:py-32 sm:px-8"
       id="features"
       aria-label="Features"
     >
@@ -41,7 +41,7 @@ export function FeatureBlock() {
               background: '#151c27',
               color: '#f9f9ff',
               borderRadius: '16px',
-              padding: '40px',
+              padding: 'clamp(24px, 4vw, 40px)',
               display: 'flex',
               flexDirection: 'column',
               minHeight: '380px',
@@ -118,7 +118,7 @@ export function FeatureBlock() {
             style={{
               border: '1px solid rgba(0,74,198,0.1)',
               borderRadius: '16px',
-              padding: '32px',
+              padding: 'clamp(20px, 4vw, 32px)',
             }}
           >
             <div
@@ -197,7 +197,7 @@ export function FeatureBlock() {
             className="font-body bg-surface-container-low"
             style={{
               borderRadius: '16px',
-              padding: '32px',
+              padding: 'clamp(20px, 4vw, 32px)',
             }}
           >
             <div

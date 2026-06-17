@@ -12,7 +12,7 @@ const retailers = [
 export function SocialProof() {
   return (
     <section
-      className="py-24 px-8"
+      className="py-16 px-4 sm:py-24 sm:px-8"
       aria-label="Social proof and supported retailers"
     >
       <div className="container">
@@ -71,12 +71,12 @@ export function SocialProof() {
             Real prices from the stores you already shop
           </h3>
 
-          {/* Retailer logos — 3 per row */}
+          {/* Retailer logos — auto-fit grid */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))',
+              gap: '12px',
               maxWidth: '1000px',
               margin: '0 auto',
             }}
@@ -85,7 +85,7 @@ export function SocialProof() {
               <div
                 key={retailer.name}
                 style={{
-                  height: '180px',
+                  height: 'clamp(96px, 18vw, 180px)',
                   borderRadius: '14px',
                   border: '1px solid rgba(67,70,85,0.1)',
                   background: '#ffffff',

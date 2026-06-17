@@ -208,7 +208,7 @@ export function WaitlistForm() {
   return (
     <section
       id="waitlist"
-      className="py-32 px-8"
+      className="py-16 px-4 sm:py-32 sm:px-8"
       aria-label="Join the waitlist"
     >
       <div className="container">
@@ -218,7 +218,7 @@ export function WaitlistForm() {
             margin: '0 auto',
             background: 'linear-gradient(135deg, #004ac6 0%, #2563eb 60%, #6a1edb 100%)',
             borderRadius: '24px',
-            padding: 'clamp(48px, 7vw, 80px) clamp(32px, 6vw, 64px)',
+            padding: 'clamp(28px, 7vw, 80px) clamp(20px, 6vw, 64px)',
             position: 'relative',
             overflow: 'hidden',
             boxShadow: '0px 24px 48px -12px rgba(0, 74, 198, 0.35)',
@@ -239,7 +239,7 @@ export function WaitlistForm() {
               <div style={{ textAlign: 'center' }}>
                 <h2
                   className="font-headline"
-                  style={{ fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', marginBottom: '16px' }}
+                  style={{ fontSize: 'clamp(22px, 5vw, 48px)', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.03em', marginBottom: '16px' }}
                 >
                   You&apos;re on the list
                 </h2>
@@ -258,12 +258,13 @@ export function WaitlistForm() {
                   <h2
                     className="font-headline"
                     style={{
-                      fontSize: 'clamp(26px, 4vw, 44px)',
+                      fontSize: 'clamp(20px, 4vw, 44px)',
                       fontWeight: 800,
                       color: '#ffffff',
                       letterSpacing: '-0.03em',
                       marginBottom: '16px',
-                      lineHeight: '1.1',
+                      lineHeight: '1.15',
+                      overflowWrap: 'break-word',
                     }}
                   >
                     Back-to-school grocery season is coming. Get your budget under control before prices spike.

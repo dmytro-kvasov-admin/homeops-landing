@@ -1,11 +1,11 @@
 export function PainProof() {
   return (
     <section
-      className="py-24 px-8 bg-surface-container-low"
+      className="py-16 px-4 sm:py-24 sm:px-8 bg-surface-container-low"
       aria-label="The problem and solution"
     >
       <div className="container">
-        <div className="grid lg:grid-cols-2 gap-24 items-center">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
 
           {/* Left — The Friction */}
           <div>
@@ -52,7 +52,7 @@ export function PainProof() {
           <div
             className="bg-surface-container-lowest premium-shadow"
             style={{
-              padding: 'clamp(40px, 5vw, 56px)',
+              padding: 'clamp(24px, 5vw, 56px)',
               borderRadius: '16px',
               border: '1px solid rgba(255,255,255,0.6)',
             }}

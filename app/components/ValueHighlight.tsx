@@ -8,7 +8,7 @@ export function ValueHighlight() {
 
   return (
     <section
-      className="py-24 px-8 overflow-hidden"
+      className="py-16 px-4 sm:py-24 sm:px-8 overflow-hidden"
       aria-label="Savings highlight"
       id="savings"
     >
@@ -18,7 +18,7 @@ export function ValueHighlight() {
             background: 'rgba(251, 191, 36, 0.05)',
             border: '1px solid rgba(245, 158, 11, 0.2)',
             borderRadius: '20px',
-            padding: 'clamp(48px, 6vw, 96px) clamp(32px, 5vw, 64px)',
+            padding: 'clamp(24px, 6vw, 96px) clamp(18px, 5vw, 64px)',
             position: 'relative',
             overflow: 'hidden',
           }}
@@ -49,7 +49,7 @@ export function ValueHighlight() {
               <h2
                 className="font-headline text-on-surface mb-8"
                 style={{
-                  fontSize: 'clamp(28px, 4vw, 48px)',
+                  fontSize: 'clamp(22px, 4vw, 48px)',
                   fontWeight: 800,
                   letterSpacing: '-0.02em',
                   lineHeight: '1.15',
@@ -95,7 +95,7 @@ export function ValueHighlight() {
                 background: '#ffffff',
                 border: '1px solid rgba(0,74,198,0.1)',
                 borderRadius: '16px',
-                padding: '32px',
+                padding: 'clamp(20px, 4vw, 32px)',
                 boxShadow: '0px 16px 40px -16px rgba(21, 28, 39, 0.12)',
               }}
             >

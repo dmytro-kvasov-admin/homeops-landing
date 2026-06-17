@@ -32,14 +32,14 @@ export function SavingsMetrics() {
   return (
     <section
       id="metrics"
-      className="py-32 px-8"
+      className="py-16 px-4 sm:py-32 sm:px-8"
       aria-label="Savings metrics"
     >
       <div className="container">
         <h2
           className="font-headline text-on-surface"
           style={{
-            fontSize: 'clamp(32px, 5vw, 56px)',
+            fontSize: 'clamp(24px, 5vw, 56px)',
             fontWeight: 800,
             letterSpacing: '-0.03em',
             textAlign: 'center',
@@ -57,7 +57,7 @@ export function SavingsMetrics() {
               className="bg-surface-container-lowest premium-shadow"
               style={{
                 borderRadius: '16px',
-                padding: '32px',
+                padding: 'clamp(20px, 4vw, 32px)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '16px',
