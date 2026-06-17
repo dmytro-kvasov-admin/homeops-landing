@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Manrope, Inter } from 'next/font/google'
 import './globals.css'
 import { PostHogProvider } from './components/PostHogProvider'
+import { GoogleTag } from './components/GoogleTag'
 
 const manrope = Manrope({
   subsets: ['latin'],
@@ -143,6 +144,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
+        <GoogleTag />
         <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
